@@ -18,6 +18,7 @@ import {
   Input,
   Button,
   Loader,
+  Segment,
   Header,
   Stepper,
   Selector,
@@ -39,17 +40,17 @@ const option = [
 
 const supplier = [];
 const GSTAnalyzer = [];
-
+const secondarySupplier = [];
 
 const DefaultButton = props => {
   const [getAllSuppliers, setAllSuppliers] = useState([]);
   const [getMail, setMail] = useState(null);
-  const [getOrderType, setOrderType] = useState(null);
+  const [getOrderType, setOrderType] = useState(1);
   const [getSupplier, setSupplier] = useState(null);
   const [getDate, setDate] = useState(null);
-  const [getHeight, setHeight] = useState(null);
-  const [getOldOrder, setOldOrder] = useState(false);
-  const [getDescription, setDescription] = useState('None')
+  const [getLoader, setLoader] = useState(false);
+  const [getDeliveryTerms, setDeliveryTerms] = useState('');
+  const [getDescription, setDescription] = useState('NONE')
 
   const gotoOrder = () => {
     if (getOrderType === null) {
@@ -70,7 +71,6 @@ const DefaultButton = props => {
 
   const netwrokChecker = () => {
     var alertHandler = [];
-
     setInterval(() => {
       NetInfo.fetch().then(state => {
         if (state.isConnected === false) {
@@ -88,8 +88,25 @@ const DefaultButton = props => {
     }, 3000)
   }
 
+  const replaceFunction = () => {
+    setInterval(() => {
+      if(global.OrderClear === 'Yes') {
+        setLoader(true)
+        setSupplier(null)
+        setDate(null);
+        setDescription(null);
+        setDeliveryTerms('')
+        global.OrderClear = 'No'
+        setLoader(false)
+      }
+    },3000)
+   
+  }
+
   useEffect(() => {
+    global.SelectDay = 1;
     netwrokChecker();
+    replaceFunction();
     global.currentDate = moment().format("DD/MM/YYYY");
     AsyncStorage.getItem('Email').then(data => {
       if (data) {
@@ -102,6 +119,7 @@ const DefaultButton = props => {
     AsyncStorage.getItem('Outlet').then(data => {
       global.outletID = data;
     })
+
   }, []);
 
   const setResult = data => {
@@ -109,6 +127,8 @@ const DefaultButton = props => {
     var i = 0;
     GSTAnalyzer.push(getter);
     supplier.length = 0;
+    secondarySupplier.length = 0;
+    secondarySupplier.push(data.data)
     {
       getter.map(item => {
         supplier.push({ label: item.name, value: item.supplier_id });
@@ -119,8 +139,9 @@ const DefaultButton = props => {
   };
 
   const setOrderTypeFunction = (data) => {
-    setOrderType(data);
-    global.SelectDay = data;
+    setOrderType(parseInt(data+1));
+    global.SelectDay = parseInt(data+1);
+    console.log(parseInt(data+1))
   }
 
 
@@ -128,6 +149,8 @@ const DefaultButton = props => {
     setSupplier(data);
     if(data != null) {
     var suppliernamer = supplier.filter(x => x.value === data);
+    var suppliernamer1 = secondarySupplier[0].filter(x => x.supplier_id === data);
+    setDeliveryTerms(suppliernamer1[0].delivery_terms)
     global.supplierName = suppliernamer[0].label;
     }
 
@@ -142,11 +165,21 @@ const DefaultButton = props => {
   
 
   const dateToFormat = '1976-04-19T12:59-0500';
+
+  if(getLoader === true) {
+    return(
+    <View style={{flex:1,alignItems: 'center',justifyContent: 'center',}}>
+      <ActivityIndicator color={Theme.PRIMARY} size="large" />
+    </View>
+    )
+  }
+
+  var day = parseInt(moment().format('DD'))+1;
   return (
     <View style={styles.mainContainer}>
       <Header
         titlestyle={{ fontSize: 16, fontWeight: '500' }}
-        image={ global.logo != null ? global.logo : URL.Logo}
+        image={ URL.Logo}
         handle={()=>props.navigation.navigate('Profile')}
         title="Add Order">
         <Stepper
@@ -161,11 +194,20 @@ const DefaultButton = props => {
         <Text style={{ paddingLeft: widther >= 500 ? '25%' : '10%' }}>
           Order type
         </Text>
-        <Selector
+        <Segment
+        value={["Day 1","Day 2","Day 3"]}
+        getIndex={0}
+        viewStyle={{width:Dimensions.get('window').width >= 450 ? '48%' : '80%',alignSelf:'center'}}
+        style1={{backgroundColor:Theme.MAINGRAY}}
+        textStyle={{color:Theme.MAINGRAY}}
+        style={{borderColor:Theme.MAINGRAY}}
+        handle={data=>setOrderTypeFunction(data)} />
+       
+        {/* <Selector
           handle={data => setOrderTypeFunction(data)}
           value={getOrderType}
           item={option}
-        />
+        /> */}
         <View style={{ height: 10 }} />
 
         <Text style={{ paddingLeft: widther >= 500 ? '25%' : '10%' }}>
@@ -174,6 +216,7 @@ const DefaultButton = props => {
         <Selector
           handle={data => setSupplierFunction(data)}
           value={getSupplier}
+          label={"Select Supplier"}
           item={getAllSuppliers}
         />
         <View style={{ height: 10 }} />
@@ -184,6 +227,8 @@ const DefaultButton = props => {
         <Date
           date={getDate}
           handle={date => setDate(date)}
+          format="DD-MM-YYYY"
+          mainDate={day+'-'+moment().format('MM-YYYY')}
           placeholder="dd/mm/yyyy"
         />
         <View style={{ height: 10 }} />
@@ -207,9 +252,17 @@ const DefaultButton = props => {
           }}
           handle={data => setDescription(data)}
         />
+
         </View>
         ) : (
           <View>
+            { getDeliveryTerms.length === 0 ? (
+              <View />
+            ) : getDeliveryTerms != null || getDeliveryTerms != '' ? (
+              <View style={{width: widther >= 500 ? '50%' : '80%',borderWidth:0.8,borderColor:'lightgray',alignSelf:'center',marginBottom:8,borderRadius:3,padding:5}}>
+          <Text style={{paddingVertical:5, color:Theme.GRAY}}>{getDeliveryTerms}</Text>
+          </View>
+            ) : null }
         <Text style={{ paddingLeft: widther >= 500 ? '25%' : '10%' }}>
           Description
         </Text>
@@ -221,7 +274,7 @@ const DefaultButton = props => {
             borderRadius: 5,
             backgroundColor: Theme.BACK,
             borderColor: Theme.GRAY,
-            height: 100,
+            height: 75,
             textAlignVertical: 'top',
             padding: 6,
             alignSelf: 'center',

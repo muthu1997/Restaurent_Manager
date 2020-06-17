@@ -4,6 +4,7 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  SafeAreaView,
   TextInput,
   ScrollView,
   AsyncStorage,
@@ -38,54 +39,56 @@ const mainImageWidth = Dimensions.get('window').width >= 500 ? 115 : 85;
 const mainFontWidth = Dimensions.get('window').width >= 500 ? 35 : 30;
 const mainTextTitle = Dimensions.get('window').width >= 500 ? 22 : 18;
 
+
+
 const data = [
-  { title: 'S.No', width: 50, length: 7 },
-  { title: 'Name', width: 100 },
-  { title: 'Code', width: 75 },
-  { title: 'Quantity', width: 75 },
-  { title: 'Price', width: 75 },
-  { title: 'Total', width: 75 },
-  { title: 'Unit', width: 75 },
+  { id:'Name',code: Dimensions.get('screen').width > 5000 ? 'Code' : null, name: 'Qty', quantity: 'Price', price: 'Total', unit: "Unit" },
 ];
 
 const supplier = [];//orderType,supplierId,date,description
-
+const finalData = [];
+const finalShowData = [];
 
 const DefaultButton = props => {
-  const [getTotal, setTotal] = useState(0);
+  const [getTotal, setTotal] = useState(0.00);
   const [getAllSuppliers, setAllSuppliers] = useState([]);
   const [getLoader,setLoader] = useState(true);
 
   const gotoSubmit = () => {
     //props.navigation.navigate('SendOrder');
-    const finalData = [];
-    const finalShowData = [];
+ 
         finalData.length=0;
         finalShowData.length=0;
-    for (var i=0; i < getAllSuppliers.length; i++) { 
+        var lengther = getAllSuppliers.filter(x => x.quantity != 0);
+    if(lengther.length > 0) {
+    for (var i=0; i < lengther.length; i++) { 
         finalData.push(
           {
-            "id":getAllSuppliers[i].productid,
-            "quantity":getAllSuppliers[i].quantity,
-            "price":getAllSuppliers[i].price
+            "id":lengther[i].productid,
+            "quantity":lengther[i].quantity,
+            "price":lengther[i].price
           }
         )
-
         finalShowData.push(
           {
-            "id":i+1,
-            "code":getAllSuppliers[i].code,
-            "name":getAllSuppliers[i].name,
-            "quantity":getAllSuppliers[i].quantity,
-            "price":getAllSuppliers[i].price,
-            "unit":getAllSuppliers[i].unit,
-            "total":getAllSuppliers[i].total,
-            "product_id":getAllSuppliers[i].productid,
+            "id": i+1,
+            // "code":lengther[i].code,
+            "name":lengther[i].name,
+            "quantity":lengther[i].quantity,
+            "price":lengther[i].price,
+            "unit":lengther[i].unit,
+            "total":lengther[i].total,
+            "product_id":lengther[i].productid,
           }
         )
      }
-
+      global.finalShowData = finalShowData;
+      global.totalAmount = getTotal;
+      global.finalData = finalData;
      gotoSender(finalShowData,finalData)
+    }else {
+      alert('Please select atleast one product.')
+    }
   };
 
 
@@ -95,10 +98,7 @@ const supplierId = global.supplierId;
 const date = global.date;
 const description = global.description;
 
-const gotoSender = (finalShowData,finalData) => {
-    global.finalShowData = finalShowData;
-    global.totalAmount = getTotal;
-    global.finalData = finalData;
+const gotoSender = () => {
     props.navigation.navigate('SendOrder');
   }
 
@@ -114,7 +114,7 @@ const gotoSender = (finalShowData,finalData) => {
 
   const setResult = data => {
     supplier.length=0;
-    var getter = data.filter(x=> x.supplier_id === global.supplierName)
+    var getter = data.filter(x=> x.supplier_id === global.supplierName & x.is_active === 1)
     var i = parseInt(0);
     var totalAmount = 0;
     for (i; i < getter.length; i++) {  
@@ -126,7 +126,7 @@ const gotoSender = (finalShowData,finalData) => {
       {
         mainResult.map(item => {
           supplier.push({ 
-            title: i+1,
+            id: i+1,
             image:
               'https://images.codedaily.io/lessons/general/verify_input/stripe_example.png',
             name: item.name,
@@ -152,8 +152,8 @@ const gotoSender = (finalShowData,finalData) => {
     var totalcost = getAllSuppliers[serielnumber].total;
 
     if (data[0].action === 'INCREMENT') {
-      var total = parseFloat(getTotal + price);
-      supplier[serielnumber].total = total;
+      var total = parseFloat(getTotal) + parseFloat(price);
+      supplier[serielnumber].total = parseFloat(data[0].quantity*price);
       supplier[serielnumber].quantity = data[0].quantity;
       setAllSuppliers(supplier);
       if(global.is_GST === 1) {
@@ -162,10 +162,21 @@ const gotoSender = (finalShowData,finalData) => {
         global.getTaxAmount = 0
       }
 
-      setTotal(total)
+      setTotal(parseFloat(total).toFixed(2))
     } else {
-      var totalDecrement = parseFloat(getTotal - price);
-      supplier[serielnumber].total = totalDecrement;
+      // supplier[serielnumber].total = parseFloat(data[0].quantity*price);
+      // supplier[serielnumber].quantity = parseFloat(data[0].quantity);
+      // setAllSuppliers(supplier);
+      // if(global.is_GST === 1) {
+      //   global.getTaxAmount = parseFloat(total * 7 / 100)
+      // }else {
+      //   global.getTaxAmount = parseFloat(0)
+      // }
+      // setTotal(parseFloat(total))
+
+
+      var total = parseFloat(getTotal) - parseFloat(price);
+      supplier[serielnumber].total = parseFloat(data[0].quantity*price);
       supplier[serielnumber].quantity = data[0].quantity;
       setAllSuppliers(supplier);
       if(global.is_GST === 1) {
@@ -173,13 +184,21 @@ const gotoSender = (finalShowData,finalData) => {
       }else {
         global.getTaxAmount = 0
       }
-      setTotal(total)
+
+      setTotal(parseFloat(total).toFixed(2))
     }
   };
 
+  const dummyWidth = Dimensions.get('window').width;
+  const dummyHeight = Dimensions.get('window').height;
+  var widthers = Dimensions.get('window').width >= 500 ? dummyWidth / 6 : dummyHeight / 6;
+  var widthers1 = Dimensions.get('window').width >= 500 ? dummyWidth / 8 : dummyHeight / 8;
 
+  var mobilelengther = [widthers,widthers,widthers,widthers1,widthers,widthers,widthers]; 
+   var tablength = ['40%','10%','20%','10%','10%','10%','10%']
+   var lengther = Dimensions.get('screen').width > 500 ? tablength : mobilelengther; 
   return (
-    <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer}>
       <Header
         titlestyle={{ fontSize: 16, fontWeight: '500' }}
         elevation={0}
@@ -191,11 +210,12 @@ const gotoSender = (finalShowData,finalData) => {
           label={['Create Order', 'Add Item', 'Send Order']}
           style={{ width: '80%', alignSelf: 'center', marginVertical: 8 }}
         />
-      </Header>
-      <Heading datas={data} length={7} />
+      </Header> 
+      <Heading headerData = {Dimensions.get('screen').width > 500 ? 'Yes' : null} datas={data} length={lengther} />
       {getLoader === false ? (
-      <ScrollView horizontal>
+      <ScrollView horizontal style={{marginBottom:75}}>
       <ListView
+      headerData = {Dimensions.get('screen').width > 500 ? 'Yes' : null}
         handle={data => getQuantityData(data)}
         style={{ backgroundColor: Theme.BACK }}
         datas={getAllSuppliers}
@@ -217,7 +237,7 @@ const gotoSender = (finalShowData,finalData) => {
           title="Next"
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

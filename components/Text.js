@@ -7,7 +7,7 @@ const mainTextWidth = Dimensions.get('window').width >= 500 ? 14 : 14;
 
 const DefaultText = props => {
   return (
-      <Text numberOfLines = {props.lines} style={{...props.style,fontSize:mainTextWidth}}>
+      <Text numberOfLines = {props.lines} {...props} style={[props.style,styles.mainText]}>
         {props.children}
       </Text>
   );
@@ -16,7 +16,7 @@ const DefaultText = props => {
 const styles = StyleSheet.create({
   mainText: {
     fontSize:mainTextWidth,  
-    //fontFamily: 'space-mono'
+    fontFamily: 'Lato-Regular'
   },
 });
 

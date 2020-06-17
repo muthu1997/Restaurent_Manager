@@ -35,20 +35,22 @@ import DashboardHandler from '../../functions/getMainDashboard';
 import ResendOrder from '../../functions/resendOrder';
 import CancelOrder from '../../functions/cancelOrder';
 import GetInvoiceDetails from '../../functions/viewInvoice';
+import moment from 'moment';
 
 const mainTextTitle = Dimensions.get('window').width >= 500 ? 22 : 18;
+const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+]
 
 const data = [
-    { title: 'S.No', width: 50, length: 7 },
-    { title: 'Registration No', width: 100 },
-    { title: 'Name', width: 100 },
-    { title: 'Address', width: 75 },
-    { title: 'Description', width: 75 },
-    { title: 'Contact', width: 75 },
-    { title: 'Sales Contact', width: 75 },
-];
-
-
+    { id:'Po Number', code: 'Supplier', name: 'Outlet', quantity: 'Order Date', price: 'Delivery Date', unit: "Delivery Day",total:'Order Total' },
+  ];
 
 const Dboard = [];
 
@@ -57,9 +59,10 @@ const SupplierList = props => {
     const [getMainResult, setMainResult] = useState(null);
     const [getMail, setMail] = useState(null);
     const [getAllData, setAllData] = useState([]);
-    const [getAllSuppliers, setAllSuppliers] = useState([]);
+    const [getSearchStatus, setSearchStatus] = useState(false)
     const [getSecondarySupplierData, setSecondarySupplierData] = useState(null);
     const [getLoader,setLoader] = useState(true);
+    const [refreshing, setRefreshing] = useState(true);
 
 
     useEffect(() => {
@@ -68,6 +71,8 @@ const SupplierList = props => {
 
     
     const getMainData = () => {
+        setRefreshing(true);
+        setLoader(true)
         AsyncStorage.getItem('Email')
             .then(data => {
                 if (data) {
@@ -84,15 +89,26 @@ const SupplierList = props => {
     const setDashboardResult = (data) => {
         setMainResult(data);
         Dboard.length = 0;
-        var datasss = data;
+        var datasss = data.data;
+        console.log(data)
         var dataResult = datasss.filter(x => x.status === 3);
         for (var i = 0; i < dataResult.length; i++) {
-            Dboard.push({ id: i + 1, transactionid: dataResult[i].transaction_no, suppliername: dataResult[i].supplier_name, outletname: dataResult[i].outlet_name, orderdate: dataResult[i].created_at, deliverydate: dataResult[i].delivery_date, deliveryday: dataResult[i].delivery_day, ordertotal: dataResult[i].total, mailOpen: dataResult[i].email_open_datetime, mailStatus: dataResult[i].email_status, orderStatus: dataResult[i].status })
+            Dboard.push({ transactionid: dataResult[i].transaction_no, 
+                suppliername: dataResult[i].supplier_name, 
+                outletname: dataResult[i].outlet_name, 
+                orderdate: dataResult[i].created_at, 
+                deliverydate: dataResult[i].delivery_date, 
+                deliveryday:  days[moment(dataResult[i].delivery_date).day()], 
+                ordertotal: dataResult[i].total, 
+                mailOpen: dataResult[i].email_open_datetime, 
+                mailStatus: dataResult[i].email_status, 
+                orderStatus: dataResult[i].status })
         }
             setAllData(Dboard);
             setSecondarySupplierData(Dboard);
-        //console.log(dataResult.length)
         setLoader(false)
+
+        setRefreshing(false);
     }
 
     const ViewInvoiceFunction = (data) => {
@@ -163,6 +179,10 @@ const SupplierList = props => {
         console.log(newData);
     }
 
+    const dummyWidth = Dimensions.get('window').width;
+    const dummyHeight = Dimensions.get('window').height;
+    var widthers = Dimensions.get('window').width >= 500 ? dummyWidth / 7 : dummyHeight / 7;
+  var lengther = [widthers,widthers,widthers,widthers,widthers,widthers]; 
     return (
         <View style={styles.mainContainer}>
             <Header
@@ -170,24 +190,31 @@ const SupplierList = props => {
                 elevation={0}
                 handle={()=>props.navigation.navigate('Profile')}
                 //handle={() => props.navigation.goBack(null)}
-                image={ global.logo != null ? global.logo : URL.Logo}
+                image={ URL.Logo}
+                image1="icon"
+                icon="search"
+                handle1={() => setSearchStatus(!getSearchStatus)}
                 title="Approvals">
+                {getSearchStatus ? (
                 <SearchHeader
                     search={data=>SearchFilterFunction(data)}
                     style={styles.selectorStyle}
                     placeholder="Search by name.."
                 />
+                ) : <View style={{width:10,height:10}} /> }
             </Header>
-            <Heading datas={data} length={7} />
+            <Heading datas={data} length={lengther} />
             {getLoader === false ? (
             <ScrollView horizontal={true} >
                 <DashList
-                receiveHandler={(data)=>ViewInvoiceFunction(data)}
-                cancelHandler={data=>cancelAlertFunction(data)}
-                getInvoice={data=>PreviewInvoiceFunction(data)}
-                resendHandler={data=>ResendOrderFunction(data)}
-                length={8}
+                // receiveHandler={(data)=>ViewInvoiceFunction(data)}
+                // cancelHandler={data=>cancelAlertFunction(data)}
+                // getInvoice={data=>PreviewInvoiceFunction(data)}
+                // resendHandler={data=>ResendOrderFunction(data)}
+                length={7}
                 pending = 'Yes'
+                mainFunction={getMainData}
+                refreshing={refreshing}
                 datas={getAllData} />
             </ScrollView>
             ) : (

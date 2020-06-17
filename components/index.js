@@ -15,6 +15,7 @@ import Segment from './segment';
 import SearchHeader from './searchHeader';
 import DashList from './dashboard';
 import SendOrder from './SendOrderList';
+import Switch from './switch';
 
 export {
   Text,
@@ -33,5 +34,6 @@ export {
   Segment,
   SearchHeader,
   DashList,
-  SendOrder
+  SendOrder,
+  Switch
 };

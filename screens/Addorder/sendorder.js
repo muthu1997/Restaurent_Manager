@@ -7,6 +7,7 @@ import {
   Image,
   TextInput,
   ScrollView,
+  SafeAreaView,
   AsyncStorage,
   BackHandler,
   ActivityIndicator,
@@ -37,6 +38,8 @@ import GetSubmitFunction from '../../functions/sendOrder';
 import getOutletData from '../../functions/getOutletDetails';
 import OrderApproval from '../../functions/orderApproval';
 import URL from '../../assets/url';
+import Modal from 'react-native-modal';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import moment from 'moment';
 //<ion-icon name="add-circle"></ion-icon>
 //<ion-icon name="person-circle"></ion-icon>
@@ -45,13 +48,7 @@ import moment from 'moment';
 const widther = Dimensions.get('window').width;
 
 const data = [
-  { title: 'Id', width: 50 },
-  { title: 'Code', width: 50 },
-  { title: 'Name', width: 100 },
-  { title: 'Quantity', width: 75 },
-  { title: 'Price', width: 75 },
-  { title: 'Unit', width: 75 },
-  { title: 'Total', width: 75 },
+  { id: 'Id', name: 'Name', quantity: 'Qty', price: 'Price', unit: 'Unit', total: 'Total' },
 ];
 const mainDataResult = [];
 const data1 = [
@@ -77,7 +74,9 @@ const DefaultButton = props => {
   const [getOutlet, setOutlet] = useState(null);
   const [getOutletDatas, setOutletDatas] = useState([]);
   const [getLogo, setLogo] = useState(null);
-  const [getButton, setButton] = useState('Send Order')
+  const [getButton, setButton] = useState('Order')
+
+  const [getModel, setModel] = useState(false)
 
   const orderType = global.orderType;
   const supplierId = global.supplierId; 
@@ -108,6 +107,7 @@ const DefaultButton = props => {
   }
 
   useEffect(() => {
+    //await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT);
     getCompanyLogoFunction();
     getOutletId();
     AsyncStorage.getItem('Email').then(data => {
@@ -159,6 +159,8 @@ const DefaultButton = props => {
   }
 
   const submitFunction = () => {
+    setModel(true)
+    console.log('enter')
     setButton('Loading..')
     var data = finalData;
     var outlet_id = getOutlet;
@@ -171,61 +173,34 @@ const DefaultButton = props => {
     GetSubmitFunction(email,data,outlet_id,internel_desc,delivery_date,supplier_id,getResult);
   }
 
-  const AddNewOrderFunction = () => {
-            var inserter = finalShowData;
-            mainDataResult.length = 0;
-            var RandomNumber = Math.floor(Math.random() * 100) + 1 ;
-            for (var i = 0; i < inserter.length; i++) {
-                var transId = "MID_"+moment().format("DD")+"_"+RandomNumber;
-                var cmpid = getCompanyId
-                var outid = getOutlet
-                var pid = inserter[i].product_id
-                var quantity = getAllData[i].quantity
-                var rate = getAllData[i].price
-                var createdat = 'getCreatedAt' //----
-                var supplier = supplierId //-------
-                var receivedat = finalData
-                var invoiceno = getInvoiceNumber
-                var amount = totalAmount
-                var taxamount = global.getTaxAmount
-                var totalamount = cgst
-                var receivedimg = null
-                var isgst = global.is_GST // -----------
-                var isdownload = 'none'
-
-                mainDataResult.push({transId: transId,cmpid:cmpid,outid:outid,pid:pid,quantity:quantity,rate: rate, createdat: createdat, supplier: supplier,receivedat:receivedat,invoiceno:invoiceno,amount:amount,taxamount:taxamount,totalamount:totalamount,receivedimg:receivedimg,isgst:isgst,isdownload:isdownload })
-           }
-            var datas = setReceiveResult1.bind(this);
-            ReceiveOrderFunctionEdit(mainDataResult,datas);
-  }
-
-  const setReceiveResult1 = (data) => {
-    if(data === 'success') {
-      global.refresher = 'Yes';
-      alert('Order placed successfully!');
-      props.navigation.navigate('Home');
-    }else {
-      alert('oops! something went wrong.')
-    }
-  }
-
   const resultSetterFunction = (data) => {
     var datas = data;
     if(datas.Message === 'success') {
+      setModel(false)
+      global.OrderClear = 'Yes'
       alert('Order placed successfully!');
-      setButton('Receive Order')
+      setButton('Order')
       global.refresher = 'Yes';
       props.navigation.navigate('Home');
-    }else {
+    }else { 
+      setModel(false)
       alert('oops! something went wrong.')
-      setButton('Receive Order')
+      setButton('Order')
     }
   }
 
   const cgst = getGst === 1 ? parseFloat((Number(totalAmount)*(Number(7)/100)+Number(totalAmount))) : parseFloat((Number(totalAmount)));
   const getGSTData = parseFloat(cgst)-parseFloat(totalAmount);
+
+  const dummyWidth = Dimensions.get('window').width;
+  const dummyHeight = Dimensions.get('window').height;
+  var widthers = Dimensions.get('window').width >= 500 ? dummyWidth / 7 : dummyHeight / 6;
+  
+  var lengtherTab = [widthers,widthers,widthers,widthers,widthers,widthers,widthers]; 
+  var lengtherMobile = ['10%','10%','30%','10%','15%','15%','20%']; 
+  var lengther = lengtherMobile;
   return ( 
-    <View style={{flex:1}}>
+    <SafeAreaView style={{flex:1}}>
       {getLoader === false ? (
     <View style={styles.mainContainer}>
       <Header
@@ -268,7 +243,7 @@ const DefaultButton = props => {
               Purchase Order
             </Text>
             <View style={styles.priceContainer}>
-              <Text style={{ color: Theme.WHITE }}>Total:${totalAmount}</Text>
+              <Text style={{ color: Theme.WHITE }}>Total:${cgst.toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -338,43 +313,45 @@ const DefaultButton = props => {
       </View>
 
         <Heading 
-        length={7}
+        length={lengther}
+        right='Yes'
+        headerData="Enabled"
         style={{backgroundColor:Theme.BACK}}
-        datas={data} />
-        <ScrollView horizontal={true}>
+        datas={data} /> 
+        <ScrollView horizontal={true} >
         <SendOrder
-        length={7}
-        style={{backgroundColor:Theme.BACK}}
+        length={lengther}
+        style={{backgroundColor:Theme.BACK}} 
         datas={finalShowData} />
         </ScrollView>
         <View style={{width:'100%',padding:5,flexDirection:'row',alignItems: 'center',justifyContent: 'space-between',}}>
-          <Text style={{marginLeft:'30%'}}>Subtotal</Text>
-          <View style={{overflow:'hidden'}}><Text>${totalAmount} </Text></View>
+          <Text style={{marginLeft:'60%'}}>Subtotal</Text>
+          <View style={{overflow:'hidden'}}><Text>${parseFloat(totalAmount).toFixed(2)} </Text></View>
         </View>
         <View style={{width:'100%',padding:5,flexDirection:'row',alignItems: 'center',justifyContent: 'space-between'}}>
-          <Text style={{marginLeft:'30%'}}>GST </Text>
-          <View style={{overflow:'hidden'}}><Text >${global.getTaxAmount} </Text></View>
+          <Text style={{marginLeft:'60%'}}>GST </Text>
+          <View style={{overflow:'hidden'}}><Text >${global.getTaxAmount.toFixed(2)} </Text></View>
         </View>
         <View style={{width:'100%',padding:5,flexDirection:'row',alignItems: 'center',justifyContent: 'space-between'}}>
-          <Text style={{marginLeft:'30%'}}>Total </Text>
-          <View style={{overflow:'hidden'}}><Text>${cgst} </Text></View>
+          <Text style={{marginLeft:'60%'}}>Total </Text>
+          <View style={{overflow:'hidden'}}><Text>${cgst.toFixed(2)} </Text></View>
         </View>
         </ScrollView>
 
       <View style={styles.bottomContainer}>
-        {global.OrderType === "Add New Order" ? (
+        {/* {global.OrderType === "Add New Order" ? (
         <Button
         handle={AddNewOrderFunction}
           style={{ alignSelf: 'center', marginVertical: 8 }}
-          title="Send Order"
+          title="Order"
         />
-        ) : (
+        ) : ( */}
           <Button
         handle={submitFunction}
           style={{ alignSelf: 'center', marginVertical: 8 }}
           title={getButton}
         />
-        )}
+        {/* )} */}
       </View>
     </View>
     ) : (
@@ -382,7 +359,16 @@ const DefaultButton = props => {
                     <ActivityIndicator color={Theme.PRIMARY} size="large" />
                 </View>
             )}
-    </View>
+
+        <Modal
+            isVisible={getModel}>
+              <View style={{flex:1,alignItems: 'center',justifyContent: 'center',}}>
+            <View style={{alignSelf:'center',width:75,height:75,backgroundColor:'#FFFF',alignSelf:'center',alignItems:'center',justifyContent:'center',borderRadius:10}}>
+              <ActivityIndicator color={Theme.PRIMARY} size="large" />
+            </View>
+            </View>
+            </Modal>
+    </SafeAreaView>
   );
 };
 

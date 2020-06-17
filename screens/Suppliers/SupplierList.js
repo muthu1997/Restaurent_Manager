@@ -30,17 +30,13 @@ import {
 import Theme from '../../assets/Theme';
 import SupplierHandler from '../../functions/getSupplierById';
 import URL from '../../assets/url';
+import call from 'react-native-phone-call';
 
 const mainTextTitle = Dimensions.get('window').width >= 500 ? 22 : 18;
 
 const data = [
-    { title: 'S.No', width: 50, length: 7 },
-    { title: 'Name', width: 100 },
-    { title: 'Description', width: 75 },
-    { title: 'Contact', width: 75 },
-    { title: 'Sales Contact', width: 75 },
-];
-
+    { id: 'Name', code: 'Contact', name: 'Sales Contact' },
+  ];
 const option = [
     { label: 'All Suppliers', value: 'All Suppliers' },
     { label: 'Supplier 1', value: '2' },
@@ -51,30 +47,36 @@ const supplier = [];
 
 const SupplierList = props => {
 
-    const [getCompanyId, setCompanyId] = useState(null);
+    const [getSearchStatus, setSearchStatus] = useState(false)
     const [getAllSuppliers, setAllSuppliers] = useState([]);
     const [getSecondarySupplierData, setSecondarySupplierData] = useState(null);
     const [getLoader,setLoader] = useState(true);
+    const [refreshing, setRefreshing] = useState(true);
 
 
     useEffect(() => {
-        AsyncStorage.getItem('Email')
-            .then(data => {
-                if (data) {
-                    var email = data;
-                    AsyncStorage.getItem('Company_Id')
-                        .then(cdata => {
-                            if (cdata) {
-                                var id = cdata;
-                                var dataSetter = setSuppliersData.bind(this);
-                                SupplierHandler(email, id, dataSetter);
-                            }
-                        })
-                } else {
-                    alert('There is some problem. Please logout and login again.')
-                }
-            })
+       mainFunction()
     }, [])
+
+    const mainFunction = () => {
+        setRefreshing(true)
+        AsyncStorage.getItem('Email')
+        .then(data => {
+            if (data) {
+                var email = data;
+                AsyncStorage.getItem('Company_Id')
+                    .then(cdata => {
+                        if (cdata) {
+                            var id = cdata;
+                            var dataSetter = setSuppliersData.bind(this);
+                            SupplierHandler(email, id, dataSetter);
+                        }
+                    })
+            } else {
+                alert('There is some problem. Please logout and login again.')
+            }
+        })
+    }
 
     const setSuppliersData = (data) => {
         if (data === 'error') {
@@ -85,17 +87,16 @@ const SupplierList = props => {
             {
                 mainResult.map(item => {
                     supplier.push({
-                        id: item.s_no,
-                        code: item.name,
-                        name: item.description,
-                        quantity: item.contact_number,
-                        price: item.sales_contact,
+                        id: item.name,
+                        code: item.contact_number,
+                        name: item.sales_contact,
                     });
                 });
             }
             setAllSuppliers(supplier);
             setSecondarySupplierData(supplier);
             setLoader(false)
+            setRefreshing(false)
         }
     }
  
@@ -110,6 +111,10 @@ const SupplierList = props => {
         console.log(newData);
     }
 
+    const dummyWidth = Dimensions.get('window').width;
+    const dummyHeight = Dimensions.get('window').height;
+    var widthers = Dimensions.get('window').width >= 500 ? dummyWidth / 3: dummyWidth / 3;
+  var lengther = [widthers,widthers,widthers]; 
     return (
         <View style={styles.mainContainer}>
             <Header
@@ -117,23 +122,32 @@ const SupplierList = props => {
                 elevation={0}
                 handle={()=>props.navigation.navigate('Profile')}
                // handle={() => props.navigation.goBack(null)}
-                image={ global.logo != null ? global.logo : URL.Logo}
+                image={ URL.Logo}
+                image1="icon"
+                icon="search"
+                handle1={() => setSearchStatus(!getSearchStatus)}
                 title="Suppliers">
+                {getSearchStatus ? (
                 <SearchHeader
                     search={data=>SearchFilterFunction(data)}
                     style={styles.selectorStyle}
                     placeholder="Search by name.."
                 />
+                ) : <View style={{width:10,height:10}} /> }
             </Header>
-            <Heading datas={data} length={5} />
+            <Heading datas={data} length={lengther} />
             {getLoader === false ? (
             <ScrollView horizontal={true} >
                 <SendOrder
-                    length={5}
+                    length={lengther}
                     style={{ backgroundColor: Theme.BACK }}
                     datas={getAllSuppliers}
+                    mainFunction={mainFunction}
+                    refreshing={refreshing}
+                    handlecode={data=>call({number:data})}
+                    handlename={data=>call({number:data})}
                 />
-            </ScrollView>
+            </ScrollView>  
             ) : (
                 <View style={{flex:1,alignItems: 'center',justifyContent: 'center',}}>
                     <ActivityIndicator color={Theme.PRIMARY} size="large" />

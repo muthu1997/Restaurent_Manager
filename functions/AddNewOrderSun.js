@@ -1,7 +1,6 @@
 import URL from '../assets/url';
 
-function SupplierHandler(getMainDataResult,data) {
-   // console.log(getMainDataResult)
+function SupplierHandler(Results,data) {
   fetch(URL.AddNewOrder,{
     method: 'POST',
     headers: {
@@ -9,7 +8,7 @@ function SupplierHandler(getMainDataResult,data) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-        mainDataResult:Array(getMainDataResult)
+        mainDataResult:Results
     })
   })
   .then(response => response.json())

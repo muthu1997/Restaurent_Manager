@@ -6,13 +6,13 @@ function OrderHandler(mainDataResult,datas) {
     method: 'POST',
     headers: {
       Accept: 'application/json',
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json' 
     },
     body: JSON.stringify({
       mainDataResult:mainDataResult
     })
   })
-  .then(response => response.text())
+  .then(response => response.json())
   .then(responseJson => {
     datas(responseJson)
   })

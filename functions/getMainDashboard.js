@@ -9,8 +9,8 @@ function SupplierHandler(email,data) {
     },
   })
   .then(response => response.json())
-  .then(responseJson => {
-    data(responseJson)
+  .then(responseJson => { 
+    data(responseJson) 
   })
   .catch(error=> {
     data('error')

@@ -1,6 +1,7 @@
 import URL from '../assets/url';
 
 function OrderHandler(mainDataResult,datas) {
+  console.log('Date'+mainDataResult[0].receivedat)
   fetch(URL.ReceiveOrder,{
     method: 'POST',
     headers: {
@@ -14,6 +15,7 @@ function OrderHandler(mainDataResult,datas) {
   .then(response => response.json())
   .then(responseJson => {
     datas(responseJson)
+    console.log(responseJson)
   })
   .catch(error=> {
     console.log(error)

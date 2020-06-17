@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Dimensions, Image, AsyncStorage, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Dimensions, Image, AsyncStorage,SafeAreaView, ActivityIndicator, Text } from 'react-native';
 import Constants from 'expo-constants';
 import * as Font from 'expo-font';
 import { AppLoading } from 'expo';
-import { Text, Input, Button, Loader } from '../../components';
+import { Input, Button, Loader } from '../../components';
 import Theme from '../../assets/Theme';
 import LoginHandler from '../../functions/login';
 import URL from '../../assets/url';
@@ -30,23 +30,49 @@ const DefaultButton = props => {
       LoginHandler(email,password,data);
     }
   }
-
+  
   const resultSetter = (data) => {
-    console.log(data);
-    console.log(data.data.outlet_id);
-    setLoader(false); 
+    setLoader(false);  
+    //alert(JSON.stringify(data.data))
+    //console.log(data.data); 
     if(data.success === true) {
       //alert(data.data.outlet_id)
+      var roler = data.data.role_id;
+      var edit = data.data.edit_receive;
+      //roleid(6-show all exept approval, 5-excet accounts report, add order)(invoice roll id 10 - add invoice,)
+      if(roler === 6) {
+        AsyncStorage.setItem('Role_id','ONE');
+        global.Roler = 'ONE';
+      }else if(roler === 5) {
+        AsyncStorage.setItem('Role_id','TWO');
+        global.Roler = 'TWO';
+      }else if(roler === 8) {
+        AsyncStorage.setItem('Role_id','TWO');
+        global.Roler = 'TWO';
+      }else {
+        var dummy = 'Hi';
+      }
+
+      if(edit === 1) {
+        AsyncStorage.setItem('Edit','ZERO');
+      }else {
+        AsyncStorage.setItem('Edit','ONE');
+      }
+      console.log(data)
       var logog = data.data.company_id+'_'+data.data.company_logo;
       AsyncStorage.setItem('Outlet',JSON.stringify(data.data.outlet_id));
       AsyncStorage.setItem('Company_Id',JSON.stringify(data.data.company_id));
       AsyncStorage.setItem('Company_Logo',logog);
       AsyncStorage.setItem('Email',getMail);
-      AsyncStorage.setItem('LoginStatus','Yes');
+      //AsyncStorage.setItem('Edit',data.data.edit_receive);
+      AsyncStorage.setItem('Services',data.data.services); 
+      AsyncStorage.setItem('LoginStatus','Yes'); 
+      global.logo = {uri:'http://erp.middlemen.asia/repository/company/'+logog};
 
       AsyncStorage.getItem('HomeStatus')
       .then(data => {
         if(data) {
+          global.refresher = 'Yes';
           if(data === 'Home') {
             AsyncStorage.setItem('HomeStatus','Home1');
             props.navigation.navigate('Home');
@@ -60,11 +86,17 @@ const DefaultButton = props => {
         }
       })
     }else {
-      alert(data.error);
+      if(data.error === 'Invalid Credentials') {
+        alert(data.error);
+      }else {
+        alert(data.error.email[0]);
+      }
     } 
   }
+
+  var logos = "http://erp.middlemen.asia/repository/company/null";
   return (
-    <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer}>
       <View
         style={{
           width: '100%',
@@ -74,19 +106,27 @@ const DefaultButton = props => {
           alignItems: 'center',
           justifyContent: 'flex-end',
         }}>
+          { global.logo === null || global.logo['uri'] === logos ? (
         <Image
-          style={{ width: mainImageWidth, height: mainImageWidth }}
+          style={{ width: mainImageWidth, height: mainImageWidth,margin:8 }}
           resizeMode="contain"
-          source={ global.logo != null ? global.logo : URL.Logo }
-        />
-        <View style={{ flexDirection: 'row' }}>
+          source={{uri:'http://erp.middlemen.asia/img/logo.png'}}
+        /> 
+          ) : (
+            <Image
+              style={{ width: mainImageWidth, height: mainImageWidth,margin:8 }}
+              resizeMode="contain"
+              source={ global.logo }
+            /> 
+          )}
+        {/* <View style={{ flexDirection: 'row' }}>
           <Text style={{ fontWeight: '600', fontSize: mainFontWidth }}>
             Middle
           </Text>
-          <Text style={{ fontWeight: '200', fontSize: mainFontWidth, fontfamily:'Lato-Light' }}>
+          <Text style={{ fontSize: mainFontWidth, fontfamily:'Lato-Light' }}>
             Men
           </Text>
-        </View>
+        </View> */}
       </View>
       <Input handle={data=>setMail(data)} align="center" placeholder="Email" />
       <Input secureTextEntry={true} handle={data=>setPassword(data)} align="center" placeholder="Password" />
@@ -135,7 +175,7 @@ const DefaultButton = props => {
         </View>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

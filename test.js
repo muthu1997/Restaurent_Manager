@@ -10,7 +10,8 @@ export default function SOSApp() {
   },[])
 
   const MainFunction = () => {
-    fetch('http://erp.middlemen.asia/api/vieworders/tangs@outlets.saladstop.com.sg', {
+    console.log('Enter')
+    fetch('http://131.181.190.87:3001/all', {
       method: "GET",
       headers: {
         Accept: 'application/json',
@@ -19,9 +20,7 @@ export default function SOSApp() {
     })
     .then(response => response.json())
     .then(responseJson => {
-        setText(responseJson.data)
-        var mainer = responseJson.data.filter(x => x.status === 0);
-        console.log(responseJson.data.length)
+        console.log(responseJson)
     })
     .catch(err => {
       console.log(err)
@@ -30,12 +29,7 @@ export default function SOSApp() {
 
   return(
     <View >
-        <FlatList 
-        data = {getText}
-        renderItem={({item}) => (
-        <Text style={{fontSize:30}}>{item.status}</Text>
-        )
-        } />
+       <Text>Hello buddy</Text>
     </View>
   )
 }

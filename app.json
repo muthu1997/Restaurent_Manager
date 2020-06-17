@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Middlemen",
-    "slug": "Middlemen_Restaurent_Singapore1",
+    "name": "MM ERP",
+    "slug": "Middlemen_Restaurent_Singapore25",
     "sdkVersion": "37.0.0",
     "privacy": "public",
     "platforms": [
@@ -9,13 +9,13 @@
       "android",
       "web"
     ],
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/icon_Main.png",
     "scheme": "myapp",
     "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "updates": {
@@ -26,6 +26,9 @@
     ],
     "ios": {
       "supportsTablet": true
+    },
+    "android": {
+      "package":"mmerp.middlemen.asia"
     }
   }
 }

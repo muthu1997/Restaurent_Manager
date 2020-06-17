@@ -6,7 +6,7 @@ const mainButtonWidth = Dimensions.get('window').width >= 500 ? 20 : 18;
 
 const DefaultCheckbox = props => {
 
-  const [getBtnColor, setBtnColor] = React.useState(Theme.SECONDARY)
+  const [getBtnColor, setBtnColor] = React.useState(Theme.GRAY)
   const [getValue, setValue] = React.useState(0)
 
   const functionHandler = () => {
@@ -18,7 +18,7 @@ const DefaultCheckbox = props => {
     }else {
       setValue(0);
       value = 0;
-      setBtnColor(Theme.SECONDARY)
+      setBtnColor(Theme.GRAY)
     }
     props.handle(value)
   }

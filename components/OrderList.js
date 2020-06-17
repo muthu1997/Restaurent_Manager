@@ -5,6 +5,7 @@ import {
   FlatList,
   Dimensions,
   ScrollView,
+  RefreshControl,
   Image,
   TouchableOpacity,
 } from 'react-native';
@@ -15,15 +16,16 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 
 const mainButtonWidth = Dimensions.get('window').width >= 500 ? '50%' : '80%';
 const dummyHeight = Dimensions.get('window').height;
-const dummyWidth = Dimensions.get('window').width;
+const dummyWidth = Dimensions.get('screen').width;
 const mainImage = Dimensions.get('window').width >= 500 ? 40 : 30;
 
 
 const DefaultHeader = props => {
   const getLength = props.length; 
-  const mainTitlewidth = Dimensions.get('window').width >= 500 ? dummyWidth/getLength : dummyHeight/getLength;
+  const mainTitlewidth = Dimensions.get('screen').width >= 500 ? dummyWidth/getLength : dummyHeight/getLength;
   const mainContainer = {
                 padding: 5,
+                paddingVertical:8,
                 width: mainTitlewidth,
                 borderBottomWidth: 0.5,
                 justifyContent:'center',
@@ -46,12 +48,14 @@ const DefaultHeader = props => {
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
-          <View style={{flex:1}}>
+          <View style={{flex:1,borderBottomWidth:0.5,borderBottomColor:'lightgray'}}>
           <View style={{flexDirection:'row',flex:1}}>
+            {item.id ? (
             <View
-              style={[mainContainer,{...props.style}]}> 
+              style={[mainContainer,{...props.style,width:40}]}> 
               <Text lines={1}>{item.id}</Text>
             </View> 
+            ) : null }
             <View
               style={[mainContainer,{...props.style}]}>
               <Text lines={1}>{item.code}</Text>
@@ -96,25 +100,33 @@ const DefaultHeader = props => {
             
           </View>
           
-          <View style={{width:'100%',flexDirection:'row', justifyContent:'flex-end'}}>
+          <View style={{width:'100%',flexDirection:'row', justifyContent:'flex-start'}}>
 
           <View style={{width:'10%',justifyContent: 'center',alignItems: 'center'}}>
-          <TouchableOpacity onPress={()=>props.addOrder(item.name,item.price)} style={{padding:5}} activeOpacity={0.9}>
+          <TouchableOpacity onPress={()=>props.addOrder(item.name,item.price,item.code)} style={{padding:5}} activeOpacity={0.9}>
               <Icon name = "plus-circle" size={25} color={Theme.GRAY} />
             </TouchableOpacity>
           </View>
           
           <View style={{width:'10%',justifyContent: 'center',alignItems: 'center'}}>
-          <TouchableOpacity onPress={()=>props.getInvoice(item.name,item.price)} style={{padding:5}} activeOpacity={0.9}>
+          <TouchableOpacity onPress={()=>props.getInvoice(item.name,item.price,item.code,item.quantity)} style={{padding:5}} activeOpacity={0.9}>
               <Icon name = "edit" size={25} color={Theme.GRAY} />
             </TouchableOpacity>
           </View>
+          {props.third ? (
+          <View style={{width:'10%',justifyContent: 'center',alignItems: 'center'}}>
+          <TouchableOpacity onPress={()=>props.handle3(item.quantity)} style={{padding:5}} activeOpacity={0.9}>
+              <Icon name = "image" size={25} color={Theme.GRAY} />
+            </TouchableOpacity>
+          </View>
+          ) : null }
 
           </View>
           </View>
           
         )}
         ListEmptyComponent = {EmptyView}
+        refreshControl={<RefreshControl refreshing={props.refreshing} onRefresh={props.mainFunction} />}
       />
     </View>
   );

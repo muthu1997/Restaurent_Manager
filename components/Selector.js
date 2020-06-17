@@ -29,6 +29,10 @@ const DefaultLoader = props => {
       <RNPickerSelect
         itemKey={props.value}
         style={{color:'black'}}
+        placeholder={{
+          label: props.label,
+          value: null,
+        }}
         onValueChange={props.handle}
         items={props.item}
       />

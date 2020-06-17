@@ -8,14 +8,14 @@ function SupplierHandler(email,id,dataSetter) {
       'Content-Type': 'application/json'
     },
   })
-  .then(response => response.json())
+  .then(response => response.json()) 
   .then(responseJson => {
     dataSetter(responseJson)
-  })
+  }) 
   .catch(error=> {
     console.log(error)
     dataSetter('error'); 
-  })
+  }) 
 }
 
 export default SupplierHandler;

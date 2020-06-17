@@ -33,6 +33,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import { setLightEstimationEnabled } from 'expo/build/AR';
 const mainTextTitle = Dimensions.get('window').width >= 500 ? 22 : 18;
 
+const mainImageWidth = Dimensions.get('window').width >= 500 ? 115 : 85;
 
 const SupplierList = props => {
 
@@ -66,12 +67,20 @@ const SupplierList = props => {
         AsyncStorage.removeItem('Id');
         AsyncStorage.removeItem('Email');
         AsyncStorage.removeItem('LoginStatus');
+        AsyncStorage.removeItem('Edit');
+        AsyncStorage.removeItem('Role_id');
+        AsyncStorage.removeItem('Company_Name');
+        AsyncStorage.removeItem('Services');
         props.navigation.navigate('Login');
       }
 
     return (
         <View style={styles.mainContainer}>
-            <Icon name="user-circle" style={{margin:10}} color={Theme.PRIMARY} size={Dimensions.get('screen').width >= 500 ? 95 : 65} />
+            <Image
+              style={{ width: mainImageWidth, height: mainImageWidth,margin:8 }}
+              resizeMode="contain"
+              source={ global.logo }
+            /> 
     <Text style={styles.mailtext}>{getMail}</Text>
             <Button handle={logout} title="Logout Now" />
         </View>

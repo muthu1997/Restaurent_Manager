@@ -21,7 +21,7 @@ const mainIconSize = Dimensions.get('window').width >= 500 ? 40 : 30;
 const DefaultText = props => {
   return (
     <View elevation={0} {...props} style={styles.mainCard}>
-    <View style={{flexDirection:'row',width:'100%',alignItems:'center',justifyContent:'center'}}>
+    <View style={{flexDirection:'row',width:'100%',alignItems:'center',justifyContent:'center',marginVertical:5}}>
       <View
         style={{
           flexDirection: 'row',

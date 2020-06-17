@@ -13,15 +13,15 @@ const DefaultButton = props => {
 
   const indexHandler = (data) => {
       setIndex(data);
-      props.handle(data);
+      props.handle(data); 
   }
   return (
-        <View style={styles.mainTabStyle}>
+        <View style={[styles.mainTabStyle,props.viewStyle]}>
         <SegmentedControlTab
           values={props.value}
           selectedIndex={getIndex}
-          tabTextStyle={{color:Theme.PRIMARY}}
-          activeTabStyle={{backgroundColor:Theme.PRIMARY}}
+          tabTextStyle={{color:Theme.PRIMARY,...props.textStyle}}
+          activeTabStyle={{backgroundColor:Theme.PRIMARY,...props.style1}}
           tabStyle={{...styles.mainTab,...props.style}}
           onTabPress={data=>indexHandler(data)}
         />

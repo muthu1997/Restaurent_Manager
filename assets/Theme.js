@@ -1,5 +1,5 @@
 const PRIMARY = '#38c0a4';
-const SECONDARY = '#d2d2d2';
+const SECONDARY = '#f9f9f9';
 const LIGHT = '#fafafa';
 const PURPLE = '#bf1d8c';
 const GREEN = '#1ba832';
@@ -11,6 +11,7 @@ const BLACK = '#000000';
 const WHITE = '#ffffff';
 const RED = '#d63031';
 const ORANGE = '#ff9f43';
+const MAINGRAY = 'rgb(128,132,143)';
 
 export default {
   PRIMARY,
@@ -25,5 +26,6 @@ export default {
   BLACK,
   WHITE,
   RED,
-  ORANGE
+  ORANGE,
+  MAINGRAY
 }

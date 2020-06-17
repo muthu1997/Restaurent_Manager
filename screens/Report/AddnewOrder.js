@@ -11,10 +11,9 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     CheckBox,
-    Alert,
+    Text,
 } from 'react-native';
 import {
-    Text,
     Input,
     Button,
     Loader,
@@ -38,22 +37,19 @@ import * as Permissions from 'expo-permissions';
 import ImageUploader from '../../functions/uploadImage';
 import ReceiveOrderFunctionNewOrder from '../../functions/AddNewOrderSun';
 import moment from 'moment';
+import Modal from 'react-native-modal';
+import { Camera } from 'expo-camera';
 
 const data = [
-    { title: 'S.No', width: 50, length: 7 },
-    { title: 'Name', width: 100 },
-    { title: 'Code', width: 100 },
-    { title: 'Quantity', width: 75 },
-    { title: 'Price', width: 75 },
-    { title: 'Total', width: 75 },
-    { title: 'Unit', width: 75 },
-];
+    { id:'S.No', code: 'Name', name: 'Code', quantity: 'Quantity', price: 'Price', unit: "Total",total:'Unit' },
+  ];
 
 const AllSupplierDetails = [];
 const supplierNameForOrder = [];
 const supplier = [];
 const mainDataResult = [];
 const supplierPicker = [];
+const tempPrice = [];
 
 const AddNewOrder = props => {
     const bs = React.createRef();
@@ -69,8 +65,8 @@ const AddNewOrder = props => {
     const [getTotalAmount, setTotalAmount] = useState(0);
     const [getTaxAmount, setTaxAmount] = useState(0);
     const [getReceivedAmount, setReceivedAmount] = useState(0);
-    const [getInvoiceNumber, setInvoiceNumber] = useState(0);
-    const [getDeliveryDate, setDeliveryDate] = useState();
+    const [getInvoiceNumber, setInvoiceNumber] = useState(null);
+    const [getDeliveryDate, setDeliveryDate] = useState(null);
     const [getLocalImage, setLocalImage] = useState(null);
     const [getTexter, setTexter] = useState('Capture');
     const [getSubmitText, setSubmitText] = useState('Send Order');
@@ -79,8 +75,21 @@ const AddNewOrder = props => {
     const [getSupplier, setSupplier] = useState(null);
     const [getSupplierGST, setSupplierGST] = useState(0);
     const [getMainDataResult, setMainDataResult] = useState([]);
+    const [getTextInput, setTextInput] = useState();
+    const [getInvoiceUploadResult, setInvoiceUploadResult] = useState(false);
+    const [getTempPId, setTempPId] = useState(null);
+    const [getTransId, setTransId] = useState(null);
+    const [getInvoicePrefix,setInvoicePrefix] = useState(null);
+    const [getCompany, setCompany] = useState(null);
+    const [getSubmitImage, setSubmitImage] = useState(null);
 
     useEffect(() => {
+        AsyncStorage.getItem('Company_Name')
+        .then(data => {
+            if(data) {
+                setCompany(data);
+            }
+        })
         AsyncStorage.getItem('Outlet').then(data => {
             if(data) {
                setOutletId(data);
@@ -109,24 +118,26 @@ const setNewOrderDetailsFunction = () => {
 const setSupplierFetchResult = data => {
     var getter = data.data;
     supplierPicker.length = 0;
+    console.log(getter)
     {
       getter.map(item => {
         supplierPicker.push({ label: item.name, value: item.supplier_id });
       });
     }
-    console.log(getter[0].name)
     AllSupplierDetails.push(getter);
     setAllSuppliers(supplierPicker);
     setDefaultSupplier(getter[0].name)
   };
 
     const setTopSupplierFunction = (data) => {
+        if(data != null) {
         setLoader(true);
         var result = AllSupplierDetails[0];
         setSupplierId(data)
         var name = result.filter(x => x.supplier_id === data);
         setSupplier(name[0].name);
         global.supplierName = name[0].name;
+        setInvoicePrefix(name[0].invoice_prefix)
         global.supplierId = data;
         supplierNameForOrder.length = 0;
         setSupplierGST(name[0].is_gst);
@@ -136,6 +147,7 @@ const setSupplierFetchResult = data => {
         setTotalAmount(0);
         setTaxAmount(0);
         setReceivedAmount(0);
+        }
       }
 
       const runSupplierProductFunction = () => {
@@ -154,9 +166,8 @@ const setSupplierFetchResult = data => {
 
     const SupplierHandlerAddNewOrder = (data) => {
         var sipplierIdentifier = supplierNameForOrder[0];
-        console.log(getSupplier)
     supplier.length=0;
-    var getter = data.filter(x=> x.supplier_id === sipplierIdentifier[0].name)
+    var getter = data.filter(x=> x.supplier_id === sipplierIdentifier[0].name & x.is_active === 1)
     var i = parseInt(0);
     var totalAmount = 0;
     for (i; i < getter.length; i++) {  
@@ -166,6 +177,7 @@ const setSupplierFetchResult = data => {
       {
         mainResult.map(item => {
           supplier.push({ 
+                    id:parseInt(i + 1),
                     title: parseInt(i + 1),
                     image:'https://images.codedaily.io/lessons/general/verify_input/stripe_example.png',
                     name: item.name,
@@ -193,7 +205,9 @@ const setSupplierFetchResult = data => {
         supplier[serielnumber].total = parseFloat(price*quantity);
         supplier[serielnumber].quantity = data[0].quantity;
         setAllData(supplier);
-        setTotalAmount(parseFloat(getTotalAmount+price));
+        
+            setTotalAmount(getTotalAmount+price === 'NaN' ? 0 : parseFloat(getTotalAmount+price));
+        
         if (getSupplierGST === 0) {
             var totaler=getTotalAmount+price;
             setReceivedAmount(totaler);
@@ -208,7 +222,8 @@ const setSupplierFetchResult = data => {
         supplier[serielnumber].total = parseFloat(price*quantity);
         supplier[serielnumber].quantity = data[0].quantity;
         setAllData(supplier);
-        setTotalAmount(parseFloat(getTotalAmount-price));
+        setTotalAmount(getTotalAmount-price === 'NaN' ? 0 : parseFloat(getTotalAmount-price));
+        
         if (getSupplierGST === 0) {
             var totaler=getTotalAmount-price;
             setReceivedAmount(totaler);
@@ -224,33 +239,50 @@ const setSupplierFetchResult = data => {
 };
 
 const AddNewOrderFunction = () => {
+    if(getSupplierId === null) {
+        alert('Please select Supplier')
+    }else if(getInvoiceNumber === null) {
+        alert('Please enter invoice number');
+    }else if(getDeliveryDate === null) {    
+        alert('Please select delivery date.')
+    }else if(getInvoiceUploadResult === false) {
+        alert('Please select invoice image')
+    }else {
     mainDataResult.length = 0;
-    var RandomNumber = Math.floor(Math.random() * 1000) + 1 ;
+    var Results = [] ;
+    Results.length=0;
+    var rest = AllSupplierDetails[0];
+    var invoicenumber = rest.filter(x=> x.supplier_id === getSupplierId)
+    var inv = invoicenumber[0].invoice_prefix+getInvoiceNumber
+    console.log(inv)
     for (var i = 0; i < getAllData.length; i++) {
-        var transId = "MID_"+moment().format("DD")+"_"+(Math.floor(Math.random() * 1000) + 1);
+        var transId = getTransId;
         var cmpid = getCompanyId
         var outid = getOutletId
         var pid = getAllData[i].product_id
         var quantity = getAllData[i].quantity
         var rate = getAllData[i].price
         var supplier = getSupplierId //-------
-        var receivedat = getDeliveryDate //=======
-        var invoiceno = getInvoiceNumber
+        var receivedat = moment(getDeliveryDate).format('YYYY-MM-DD') //=======
+        var invoiceno = inv
         var amount = getTotalAmount
+        var receivedimg = getSubmitImage
         var taxamount = getTaxAmount
         var totalamount = getReceivedAmount
         var isgst = getSupplierGST // -----------
         var paid = getPayment
-
+        Results.push({transId: transId,cmpid:cmpid,outid:outid,pid:pid,quantity:quantity,rate: rate, supplier: supplier,receivedat:receivedat,invoiceno:invoiceno,amount:amount,taxamount:taxamount,totalamount:totalamount,isgst:isgst, paid:paid,receivedimg:receivedimg })
         setMainDataResult({transId: transId,cmpid:cmpid,outid:outid,pid:pid,quantity:quantity,rate: rate, supplier: supplier,receivedat:receivedat,invoiceno:invoiceno,amount:amount,taxamount:taxamount,totalamount:totalamount,isgst:isgst, paid:paid })
    }
     var datas = setReceiveResultAddNewOrder.bind(this);
-    ReceiveOrderFunctionNewOrder(getMainDataResult,datas);
-
+    ReceiveOrderFunctionNewOrder(Results,datas);
+    }
 }
 
 const setReceiveResultAddNewOrder = (data) => {
-    if(data === 'success') {
+    if(data === 'Success') {
+        global.sunRefresh = 'Yes';
+        alert('Order created successfully.')
         props.navigation.navigate('Home')
     }else {
         alert('oops! something went wrong.')
@@ -261,7 +293,7 @@ const getBottomSlider = () => {
     return (
         <BottomSheet
             ref={bs}
-            snapPoints={[75, 280, 280]}
+            snapPoints={[75, 300, 300]}
             initialSnap={0}
             enabledManualSnapping={true}
             renderContent={renderContent}
@@ -301,31 +333,31 @@ const renderReceive = () => {
 
 <View style={{backgroundColor:'#ecf0f1'}}>
         <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-            <View style={{ width: '25%', paddingLeft: '5%', }}>
+            <View style={{ width: '25%', paddingLeft: '5%', height:'100%' }}>
                 <Text style={styles.headingText}>Amount</Text>
                 <View style={{width:75,height:15,overflow:'hidden'}}>
-                <Text style={styles.totalText}>{getTotalAmount}</Text>
+                <Text style={styles.totalText}>{parseFloat(getTotalAmount.toFixed(4))}</Text>
                 </View>
             </View>
-            <View style={{ width: '25%', paddingLeft: '5%', }}>
+            <View style={{ width: '25%', paddingLeft: '5%', height:'100%' }}>
                 <Text style={styles.headingText}>Tax Amount</Text>
                 <View style={{width:75,height:15,overflow:'hidden'}}>
-                <Text style={styles.totalText}>{getTaxAmount}</Text>
+                <Text style={styles.totalText}>{parseFloat(getTaxAmount.toFixed(4))}</Text>
                 </View>
 
             </View>
-            <View style={{ width: '25%', paddingLeft: '5%', }}>
+            <View style={{ width: '25%', paddingLeft: '5%', height:'100%' }}>
                 <Text style={styles.headingText}>Received Amount</Text>
                 <View style={{width:75,height:15,overflow:'hidden'}}>
-                <Text style={styles.totalText}>{getReceivedAmount}</Text>
+                <Text style={styles.totalText}>{parseFloat(getReceivedAmount.toFixed(4))}</Text>
                 </View>
             </View>
-            <View style={{ width: '25%', paddingLeft: '5%', }}>
+            <View style={{ width: '25%', paddingLeft: '5%', height:'100%' }}>
                 <Text style={[styles.headingText]}>Amount Paid</Text>
                 <TouchableOpacity activeOpacity={0.9} style={{flexDirection:'row'}}>
                     <Checkbox 
                     handle={data=>setPayment(data)} />
-                    <Text style={styles.headingText}>  {getPayment === 0 ? "No" : "Yes"}</Text>
+                    <Text style={styles.totalText}>  {getPayment === 0 ? "No" : "Yes"}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -346,8 +378,8 @@ const getEditableDatas = () => {
                     style={{ width: '94%', height: 40, borderWidth: 0.5, borderRadius: 5, paddingLeft: 8, marginVertical: 5 }}
                     placeholder="Enter Invoice Number" />
             </View>
-            <View style={{ width: '50%', alignItems: 'center', justifyContent: 'center', }}>
-                <Text style={styles.headingText}>Date</Text>
+            <View style={{ width: '50%', justifyContent: 'center', }}>
+                <Text style={[styles.headingText,{marginLeft:'3%'}]}>Date</Text>
                 {renderDate()}
             </View>
         </View>
@@ -358,14 +390,12 @@ const renderDate = () => {
     var year = Number(moment().format("YYYY"))+Number(2);
     return (
             <Date
-                style={{ width: '95%', height: 40 }}
-                date={getDeliveryShoaDate}
-                format={"DD-MM-YYYY"}
-                minDate={moment().format("DD-MM-YYYY")}
-                maxDate={moment().format("DD-MM")+'-'+year}
-                //handle={date => setDeliveryDate(date)}
-                handle={date => setDateFunction(date)}
-                placeholder="dd/mm/yyyy"
+            style={{ width: '95%', height: 40 }}
+            date={getDeliveryShoaDate}
+            handle={date => setDateFunction(date)}
+            mainDate = {moment().format('DD-MM-YYY')}
+            format={"DD-MM-YYYY"}
+            placeholder="dd/mm/yyyy"
             />
     )
 }
@@ -393,12 +423,15 @@ const bottomButton = () => {
 
 const getPermissionImageAsync = async () => {
         
-    const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    //const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+    const { status } = await Camera.requestPermissionsAsync()
     if (status !== 'granted') {
       alert('Sorry, we need camera roll permissions to make this work!');
     }else {
       selectInvoiceImageFunction();
     }
+
+    
   
 };
 
@@ -408,15 +441,20 @@ const selectInvoiceImageFunction = async() => {
           mediaTypes: ImagePicker.MediaTypeOptions.All,
           allowsEditing: false,
           aspect: [4, 3],
-          quality: 1,
+          quality: 0.4,
         });
         if (!result.cancelled) {
           setLocalImage(result.uri);
+          var path = getCompany;
+          var trans = getOutletId+moment().format("DD")+"_"+(Math.floor(Math.random() * 1000) + 1);
           var image = result.uri;
           var invNo = getInvoiceNumber;
+          var invNo = getInvoicePrefix+getInvoiceNumber+'_'+trans;
+          setSubmitImage(invNo+'.jpg')
           var dataResult = setUploadResult.bind(this);
-          ImageUploader(image,invNo,dataResult);
+          ImageUploader(image,invNo,path,dataResult);
           setTexter('Uploading...');
+          setTransId(trans);
         }
   
       } catch (E) {
@@ -427,12 +465,57 @@ const selectInvoiceImageFunction = async() => {
 const setUploadResult = (data) => {
   if(data != 'error') {
       setTexter('Uploaded Successfully.');
+      setInvoiceUploadResult(true)
   } else {
       setTexter('Please try again.');
   }
 }
 
+const setInput = (data) => {
+    console.log(data)
+    setTempPId(data);
+  setTextInput(!getTextInput)
+}
 
+const setChangePrice = (data) => {
+    tempPrice.length=0;
+    tempPrice.push(parseInt(data));
+}
+
+const priceSetter = () => {
+    setLoader(true)
+    var result = supplier.filter(x=>x.code === getTempPId)
+    result[0].price = tempPrice[0];
+    setAllData(supplier);
+    console.log(supplier);
+    setLoader(false)
+    setTextInput(false)
+}
+
+const renderModel = () => {
+  return(
+      <View style={styles.modelContainer}>
+          <TextInput
+          placeholder="Enter Price"
+          style={{width:'80%',height:40,borderBottomWidth:1,borderBottomColor:Theme.PRIMARY,marginVertical:15}}
+          onChangeText={data=>setChangePrice(data)} />
+          <View style={{width:'100%',flexDirection:'row',justifyContent: 'center',}}>
+          <Button 
+              title={"Submit"} 
+              handle={priceSetter} 
+              style={{width:Dimensions.get('screen').width > 500 ? '40%' : '40%',marginHorizontal:10}}  />
+          <TouchableOpacity onPress={()=>setTextInput(false)} style={{padding:5,marginVertical:15}}><Text style={{fontSize:15,color:Theme.PRIMARY}}>Cancel</Text></TouchableOpacity>
+          </View>
+      </View>
+  )
+}
+
+
+
+const dummyWidth = Dimensions.get('window').width;
+const dummyHeight = Dimensions.get('window').height;
+var widthers = Dimensions.get('window').width >= 500 ? dummyWidth / 6 : dummyHeight / 6;
+var lengther = [40,widthers,widthers,widthers,widthers,widthers,widthers]; 
 
     return (
         <View style={styles.container}>
@@ -448,14 +531,15 @@ const setUploadResult = (data) => {
                         <Selector
                             handle={data => setTopSupplierFunction(data)}
                             style={{backgroundColor:'#FFFF'}}
-                            value={getDefaultSupplier}
+                            value={getDefaultSupplier} 
                             item={getAllSuppliers}
+                            label="Select Supplier"
                             />
                     </View>
                     
                 </Header>
-                <Heading datas={data} length={7} />
-                <ScrollView horizontal={true} >
+                <Heading datas={data} length={lengther} />
+                <ScrollView horizontal={true} style={{marginBottom:75}} >
                 {getLoader === true ? (
                     <View style={{width:Dimensions.get('screen').width,alignItems: 'center',justifyContent: 'center'}}>
                         <ActivityIndicator size="large" color={Theme.PRIMARY} />
@@ -464,6 +548,7 @@ const setUploadResult = (data) => {
                     <ListView
                         quantitys={10}
                         handle={data => getQuantityData(data)}
+                        handleinput={data=>setInput(data)}
                         style={{ backgroundColor: Theme.BACK }}
                         datas={getAllData}
                     />
@@ -473,6 +558,10 @@ const setUploadResult = (data) => {
             {getBottomSlider()}
 
             
+            <Modal
+            isVisible={getTextInput}>
+            {renderModel()}
+            </Modal>
         </View>
     );
 }
@@ -503,7 +592,15 @@ const styles = StyleSheet.create({
     headingTextcamera: {
         fontSize: Dimensions.get('screen').width > 500 ? 14 : 10
     },
-    
+    modelContainer: {
+        width: Dimensions.get('screen').width > 500 ? '50%' : '80%',
+        padding:5,
+        borderRadius:10,
+        backgroundColor:Theme.WHITE,
+        alignItems: 'center',
+        justifyContent:'center',
+        alignSelf: 'center',
+    }
 });
 
 

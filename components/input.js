@@ -11,6 +11,7 @@ const DefaultText = props => {
       <TextInput
       style={[styles.mainInput,{...props.style}]}
       {...props}
+      defaultValue={props.value}
       multiline={props.multiline}
       textAlign={props.align}
       placeholder={props.placeholder}

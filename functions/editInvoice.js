@@ -12,7 +12,7 @@ function OrderHandler(mainDataResult,datas) {
       mainDataResult:mainDataResult
     })
   })
-  .then(response => response.text())
+  .then(response => response.json())
   .then(responseJson => {
     datas(responseJson)
   })

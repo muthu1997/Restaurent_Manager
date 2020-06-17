@@ -4,7 +4,7 @@ const GetSuppliersList = 'http://erp.middlemen.asia/api/productsview/';
 const GetsupplierDetails = 'http://erp.middlemen.asia/api/suppliersget/';
 const GetCompanyDetails = 'http://erp.middlemen.asia/api/supplierindex/';
 const SendOrder = 'http://erp.middlemen.asia/api/sendorder/';
-const OrderApproval = 'http://erp.middlemen.asia/api/sendapprovals/';
+const OrderApproval = 'http://erp.middlemen.asia/api/sendapprovals/'; 
 const Dashboard = 'http://erp.middlemen.asia/api/vieworders/';
 const SupplierById = 'http://erp.middlemen.asia/api/viewsuppliersbyid/';
 const UploadImage = 'http://erp.middlemen.asia/Newapp/UploadImage.php';
@@ -27,7 +27,7 @@ const OrderedProducts = 'https://erp.middlemen.asia/api/viewOrderedProducts/';
 const PendingProducts = 'http://erp.middlemen.asia/api/viewAllProducts/';
 const AddNewOrder = 'http://erp.middlemen.asia/Newapp/AddNewOrder.php';
 //Images
-const Logo = require('./images/logo.png');
+const Logo = {uri:'http://erp.middlemen.asia/img/logo.png'};
 
 export default {
   Login,

@@ -9,7 +9,7 @@ function SupplierHandler(id,dataSetter) {
     },
     body: JSON.stringify({
         tno : id
-    })
+    }) 
   })
   .then(response => response.json())
   .then(responseJson => {

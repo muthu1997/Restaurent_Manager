@@ -1,7 +1,7 @@
 import URL from '../assets/url';
 
 function SupplierHandler(email,data,outlet_id,internel_desc,delivery_date,supplier_id,getResult) {
-  //console.log(email+','+JSON.stringify(data)+','+outlet_id+','+internel_desc+','+delivery_date+','+supplier_id+','+getResult);
+  console.log(email+','+JSON.stringify(data)+','+outlet_id+','+internel_desc+','+delivery_date+','+supplier_id+','+getResult);
   fetch(URL.SendOrder+email,{
     method: 'POST',
     headers: {

@@ -33,7 +33,7 @@ const DefaultQuantity = props => {
       <TouchableOpacity onPress={decreaser} activeOpacity={0.8} style={[styles.buttonStyle,{...props.style}]}>
         <Icon name='remove' color={Theme.PURPLE} size={mainIconSize} />
       </TouchableOpacity>
-      <View style={{flex:1,alignItems:'center',justifyContent:'center',...props.style}}>
+      <View style={{padding:8,alignItems:'center',justifyContent:'center',...props.style}}>
         <Text>{getValue}</Text>
       </View>
       <TouchableOpacity onPress={increaser} activeOpacity={0.8} style={[styles.buttonStyle,{...props.style}]}>
@@ -49,13 +49,17 @@ const styles = StyleSheet.create({
     height:40,
     alignSelf:'center',
     borderRadius:5,
-    flexDirection:'row'
+    flexDirection:'row',
+    alignItems: 'center',
   },
   buttonStyle: {
-    width:'30%',
-    height:'100%',
+    width:25,
+    height:25,
     backgroundColor:Theme.SECONDARY,
     alignItems:'center',
+    borderRadius:2,
+    borderWidth:0.5,
+    borderColor:'lightgray',
     justifyContent:'center'
     }
 })
